@@ -33,6 +33,8 @@ part 'to_from_json_test_input.dart';
 
 part 'unknown_enum_value_test_input.dart';
 
+part 'nested_fields_test.dart';
+
 @ShouldThrow('`@JsonSerializable` can only be used on classes.')
 @JsonSerializable()
 const theAnswer = 42;

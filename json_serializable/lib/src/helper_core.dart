@@ -34,6 +34,9 @@ abstract class HelperCore {
   String nameAccess(FieldElement field) => jsonKeyFor(field).name;
 
   @protected
+  bool isUsingFieldPath(FieldElement field) => jsonKeyFor(field).isUsingPathField;
+
+  @protected
   String safeNameAccess(FieldElement field) =>
       escapeDartString(nameAccess(field));
 

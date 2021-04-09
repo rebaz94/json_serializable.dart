@@ -194,6 +194,7 @@ KeyConfig _from(FieldElement element, ClassConfig classAnnotation) {
     ignore: obj.read('ignore').literalValue as bool?,
     includeIfNull: obj.read('includeIfNull').literalValue as bool?,
     name: obj.read('name').literalValue as String?,
+    path: obj.read('path').literalValue as String?,
     required: obj.read('required').literalValue as bool?,
     unknownEnumValue: _annotationValue('unknownEnumValue', mustBeEnum: true),
   );
@@ -207,6 +208,7 @@ KeyConfig _populateJsonKey(
   bool? ignore,
   bool? includeIfNull,
   String? name,
+  String? path,
   bool? required,
   Object? unknownEnumValue,
 }) {
@@ -219,13 +221,24 @@ KeyConfig _populateJsonKey(
     }
   }
 
+  if (name != null && path != null) {
+    throwUnsupported(
+        element,
+        'Cannot set both `name` and `path` field. '
+            'Use path field only for nested field');
+  }
+
+  final fieldName = path == null ? _encodedFieldName(classAnnotation, name, element) : null;
+  final fieldPath = name == null && path != null ? _encodedFieldName(classAnnotation, path, element) : null;
+
   return KeyConfig(
     defaultValue: defaultValue,
     disallowNullValue: disallowNullValue ?? false,
     ignore: ignore ?? false,
     includeIfNull: _includeIfNull(
         includeIfNull, disallowNullValue, classAnnotation.includeIfNull),
-    name: _encodedFieldName(classAnnotation, name, element),
+    name: fieldPath ?? fieldName!,
+    isUsingPathField: fieldPath != null,
     required: required ?? false,
     unknownEnumValue: unknownEnumValue,
   );

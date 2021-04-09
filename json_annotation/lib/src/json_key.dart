@@ -64,6 +64,13 @@ class JsonKey {
   /// If `null`, the field name is used.
   final String? name;
 
+  /// The path key in a JSON map to use when reading and writing values corresponding
+  /// to the annotated fields.
+  ///
+  /// If `null`, the field name is used.
+  /// It should provide only [name] or [path] or nothing provided
+  final String? path;
+
   /// When `true`, generated code for `fromJson` will verify that the source
   /// JSON map contains the associated key.
   ///
@@ -101,6 +108,7 @@ class JsonKey {
     this.ignore,
     this.includeIfNull,
     this.name,
+    this.path,
     this.required,
     this.toJson,
     this.unknownEnumValue,

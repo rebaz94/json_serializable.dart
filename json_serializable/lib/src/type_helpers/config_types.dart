@@ -16,6 +16,8 @@ class KeyConfig {
 
   final String name;
 
+  final bool isUsingPathField;
+
   final bool required;
 
   final Object? unknownEnumValue;
@@ -26,6 +28,7 @@ class KeyConfig {
     required this.ignore,
     required this.includeIfNull,
     required this.name,
+    required this.isUsingPathField,
     required this.required,
     required this.unknownEnumValue,
   });

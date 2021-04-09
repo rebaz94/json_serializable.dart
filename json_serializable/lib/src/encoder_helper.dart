@@ -52,15 +52,61 @@ abstract class EncodeHelper implements HelperCore {
   }
 
   void _writeToJsonSimple(StringBuffer buffer, Iterable<FieldElement> fields) {
-    buffer
-      ..writeln('=> <String, dynamic>{')
-      ..writeAll(fields.map((field) {
-        final access = _fieldAccess(field);
-        final value =
-            '${safeNameAccess(field)}: ${_serializeField(field, access)}';
-        return '        $value,\n';
-      }))
-      ..writeln('};');
+    final nestedMapFields = <String, dynamic>{};
+    for (final field in fields) {
+      final access = _fieldAccess(field);
+      final isFieldPath = isUsingFieldPath(field);
+      final jsonKey = safeNameAccess(field);
+      final nestedKeys = isFieldPath ? getNestedJsonKeyNames(jsonKey) : [jsonKey];
+      final value = _serializeField(field, access);
+
+      // if we have nested key create map for each of key
+      if (isFieldPath) {
+        makeNestedMap(nestedMapFields, nestedKeys, value);
+      } else {
+        nestedMapFields[jsonKey] = value;
+      }
+    }
+
+    var strResult = mapToString(nestedMapFields);
+    strResult = strResult.substring(0, strResult.length - 1);
+    buffer..writeln('=> <String, dynamic>')..writeln(strResult)..writeln(';');
+  }
+
+  final List<Object> _toStringVisiting = [];
+
+  /// Check if we are currently visiting `o` in a toString call.
+  bool _isToStringVisiting(Object o) {
+    for (var i = 0; i < _toStringVisiting.length; i++) {
+      if (identical(o, _toStringVisiting[i])) return true;
+    }
+    return false;
+  }
+
+  String mapToString(Map<String, dynamic> m) {
+    // Modified version of mapToString from BaseIterable
+    if (_isToStringVisiting(m)) {
+      return '{...}';
+    }
+
+    final result = StringBuffer();
+    try {
+      _toStringVisiting.add(m);
+      result.write('{');
+      m.forEach((String k, dynamic v) {
+        result..write(k)..write(': ');
+        if (v is Map<String,dynamic>) {
+          result.write(mapToString(v));
+        } else {
+          result..write(v)..write(', ');
+        }
+      });
+      result.write('},');
+    } finally {
+      assert(identical(_toStringVisiting.last, m));
+      _toStringVisiting.removeLast();
+    }
+    return result.toString();
   }
 
   static const _toJsonParamName = 'instance';
@@ -155,4 +201,24 @@ abstract class EncodeHelper implements HelperCore {
                 .serialize(field.type, 'test', helperContext) !=
             null;
   }
+}
+
+List<String> getNestedJsonKeyNames(String jsonKey) {
+  return jsonKey.replaceAll("'", '').split('.').map((e) => "'$e'").toList();
+}
+
+void makeNestedMap(
+    Map<String, dynamic> nested, List<String> keys, String value) {
+  final last = keys.last;
+  keys.fold<Map<String, dynamic>>(nested, (obj, key) {
+    if (last == key) {
+      // ignore: avoid_dynamic_calls
+      obj[key] = value;
+      return obj;
+    } else {
+      // ignore: avoid_dynamic_calls
+      obj[key] ??= <String, dynamic>{};
+      return obj[key] as Map<String, dynamic>;
+    }
+  });
 }

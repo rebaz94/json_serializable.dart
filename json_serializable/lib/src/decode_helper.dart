@@ -184,6 +184,7 @@ abstract class DecodeHelper implements HelperCore {
     ParameterElement? ctorParam,
     bool checkedProperty = false,
   }) {
+    final isFieldPath = isUsingFieldPath(field);
     final jsonKeyName = safeNameAccess(field);
     final targetType = ctorParam?.type ?? field.type;
     final contextHelper = getHelperContext(field);
@@ -206,10 +207,11 @@ abstract class DecodeHelper implements HelperCore {
         assert(!checkedProperty,
             'should only be true if `_generator.checked` is true.');
 
+        final nestedNames = isFieldPath ? getNestedJsonKey(jsonKeyName) :'[$jsonKeyName]';
         value = contextHelper
             .deserialize(
               targetType,
-              'json[$jsonKeyName]',
+              'json$nestedNames',
               defaultProvided: defaultProvided,
             )
             .toString();
@@ -338,4 +340,9 @@ class _ConstructorData {
     this.fieldsToSet,
     this.usedCtorParamsAndFields,
   );
+}
+
+String getNestedJsonKey(String jsonKey) {
+  final split = jsonKey.replaceAll("'", '').split('.');
+  return split.map((k) => "['$k']").toList().join();
 }
